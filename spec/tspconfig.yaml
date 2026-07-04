@@ -1,0 +1,14 @@
+emit:
+  - "@typespec/openapi3"
+
+options:
+  "@typespec/openapi3":
+    file-type:
+      - yaml
+      - json
+    output-file: calendar.openapi.{file-type}
+    openapi-versions:
+      - 3.0.0
+    operation-id-strategy: explicit-only
+    seal-object-schemas: true
+    omit-unreachable-types: true

@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  username          String      @unique
+  name              String
+  avatarUrl         String?
+  timeZone          String      @default("Europe/Moscow")
+  defaultScheduleId String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  schedules         Schedule[]
+  eventTypes        EventType[]
+  ownerBookings     Booking[]   @relation("OwnerBookings")
+}
+
+model Schedule {
+  id               String      @id @default(uuid())
+  ownerId          String
+  name             String
+  timeZone         String      @default("Europe/Moscow")
+  isDefault        Boolean     @default(false)
+  availabilityJson String
+  overridesJson    String      @default("[]")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  owner            User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  eventTypes       EventType[]
+
+  @@index([ownerId])
+}
+
+model EventType {
+  id                          String      @id @default(uuid())
+  ownerId                     String
+  scheduleId                  String
+  title                       String
+  slug                        String
+  description                 String?
+  durationMinutes             Int
+  slotIntervalMinutes         Int?
+  minimumBookingNoticeMinutes Int?
+  beforeEventBufferMinutes    Int?
+  afterEventBufferMinutes     Int?
+  confirmationPolicyType      String      @default("automatic")
+  blockSlotBeforeConfirmation Boolean     @default(false)
+  hidden                      Boolean     @default(false)
+  bookingUrl                  String
+  createdAt                   DateTime    @default(now())
+  updatedAt                   DateTime    @updatedAt
+  owner                       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  schedule                    Schedule    @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  shareLinks                  ShareLink[]
+  bookings                    Booking[]
+
+  @@unique([ownerId, slug])
+  @@index([scheduleId])
+}
+
+model ShareLink {
+  id            String    @id @default(uuid())
+  eventTypeId   String
+  token         String    @unique
+  bookingUrl    String
+  recipientEmail String?
+  expiresAt     DateTime?
+  maxUsageCount Int?
+  usageCount    Int       @default(0)
+  createdAt     DateTime  @default(now())
+  eventType     EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+
+  @@index([eventTypeId])
+}
+
+model Booking {
+  id                 String    @id @default(uuid())
+  uid                String    @unique
+  eventTypeId        String
+  ownerId            String
+  title              String
+  description        String?
+  status             String
+  start              DateTime
+  end                DateTime
+  durationMinutes    Int
+  attendeeName       String
+  attendeeEmail      String
+  attendeeTimeZone   String
+  attendeeToken      String
+  attendeeConfirmedAt DateTime?
+  shareToken         String?
+  meetingUrl         String?
+  cancellationReason String?
+  rejectionReason    String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  eventType          EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  owner              User      @relation("OwnerBookings", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, status])
+  @@index([eventTypeId, start])
+}
