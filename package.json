@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/sherhan361/calendar#readme",
   "dependencies": {
+    "@base-ui-components/react": "^1.0.0-rc.0",
     "@prisma/client": "^6.19.0",
     "@typespec/openapi3": "^1.11.0",
     "react": "^19.2.7",

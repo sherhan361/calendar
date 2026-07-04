@@ -39,6 +39,9 @@ const server = createServer(async (request, response) => {
     const publicBookingConfirmMatch = pathname.match(/^\/public\/bookings\/([^/]+)\/confirm$/);
     if (publicBookingConfirmMatch && method === "POST") return confirmAttendee(response, publicBookingConfirmMatch[1], url.searchParams);
 
+    // Creating a booking is public (per spec, Bookings_create has no auth requirement).
+    if (method === "POST" && pathname === "/bookings") return createBooking(request, response);
+
     const currentUser = await requireUser(request, response);
     if (!currentUser) return;
 
@@ -82,7 +85,6 @@ const server = createServer(async (request, response) => {
 
     if (pathname === "/bookings") {
       if (method === "GET") return listBookings(response, currentUser, url.searchParams);
-      if (method === "POST") return createBooking(request, response);
     }
 
     const bookingActionMatch = pathname.match(/^\/bookings\/([^/]+)(?:\/(confirm|decline|cancel))?$/);

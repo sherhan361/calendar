@@ -26,7 +26,7 @@ async function main() {
   const schedule = await prisma.schedule.create({
     data: {
       ownerId: user.id,
-      name: "Working hours",
+      name: "Часы работы",
       timeZone: "Europe/Moscow",
       isDefault: true,
       availabilityJson: JSON.stringify(availability),

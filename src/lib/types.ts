@@ -48,8 +48,10 @@ export type Schedule = {
   availability: AvailabilityRule[];
 };
 
+export type ConfirmationPolicyType = "automatic" | "host" | "attendee";
+
 export type ConfirmationPolicy = {
-  type: "automatic" | "host" | "attendee";
+  type: ConfirmationPolicyType;
   blockSlotBeforeConfirmation?: boolean;
 };
 

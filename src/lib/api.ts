@@ -4,6 +4,7 @@ import type {
   AvailabilityRule,
   Booking,
   BookingStatus,
+  ConfirmationPolicyType,
   EventType,
   ListResponse,
   PublicEventType,
@@ -31,7 +32,7 @@ export type EventTypeInput = {
   minimumBookingNoticeMinutes?: number;
   afterEventBufferMinutes?: number;
   confirmationPolicy?: {
-    type: "automatic" | "host" | "attendee";
+    type: ConfirmationPolicyType;
     blockSlotBeforeConfirmation?: boolean;
   };
 };
@@ -76,6 +77,13 @@ export const api = {
       body: payload,
     }),
 
+  updateEventType: (token: string, eventTypeId: string, payload: Partial<EventTypeInput & { hidden?: boolean }>) =>
+    request<EventType>(`/event-types/${eventTypeId}`, {
+      method: "PATCH",
+      token,
+      body: payload,
+    }),
+
   createShareLink: (token: string, eventTypeId: string, recipientEmail?: string) =>
     request<ShareLink>(`/event-types/${eventTypeId}/share-links`, {
       method: "POST",
@@ -97,18 +105,18 @@ export const api = {
       token,
     }),
 
-  declineBooking: (token: string, uid: string) =>
+  declineBooking: (token: string, uid: string, reason?: string) =>
     request<Booking>(`/bookings/${uid}/decline`, {
       method: "POST",
       token,
-      body: { reason: "Declined in mock UI" },
+      body: { reason },
     }),
 
-  cancelBooking: (token: string, uid: string) =>
+  cancelBooking: (token: string, uid: string, reason?: string) =>
     request<Booking>(`/bookings/${uid}/cancel`, {
       method: "POST",
       token,
-      body: { reason: "Cancelled in mock UI" },
+      body: { reason },
     }),
 
   getPublicEventType: (username: string, slug: string, shareToken?: string) => {
