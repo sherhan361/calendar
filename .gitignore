@@ -1,7 +1,18 @@
 node_modules/
 dist/
+frontend/node_modules/
+frontend/dist/
+backend/.venv/
+backend/*.egg-info/
+backend/data/*.sqlite
+backend/data/*.sqlite-journal
+backend/data/*.sqlite-wal
+backend/data/*.sqlite-shm
+backend/.pytest_cache/
+backend/**/__pycache__/
+.pytest_cache/
 .DS_Store
 
-# Local mock database
+# Local legacy mock database
 prisma/dev.db
 prisma/dev.db-journal
