@@ -14,6 +14,7 @@
 - `backend/app/services/`: мапперы и инфраструктурные хелперы.
 - `backend/app/db/`: SQLAlchemy-модели, сессии и настройка базы.
 - `backend/app/schemas/`: Pydantic DTO, выровненные со `spec/`.
+- `backend/tests/`: pytest-тесты бэкенда, общие фикстуры, фабрики и тестовые хелперы.
 - `backend/alembic/`: миграции базы данных.
 - `backend/scripts/`: локальные хелперы для разработки бэкенда и seed-данные.
 - `spec/`: TypeSpec-модели и роуты API.
@@ -33,6 +34,7 @@
 - `make docs PORT=8080`: поднять локальную API-документацию.
 - `make build`: запустить production-сборку фронтенда (`tsc -b` и `vite build`).
 - `make test`: скомпилировать TypeSpec, запустить тесты бэкенда и собрать фронтенд.
+- `cd backend && .venv/bin/python -m pytest tests/test_booking_creation.py`: запустить отдельный файл backend-тестов.
 
 ## Стиль кода и соглашения об именовании
 
@@ -48,9 +50,13 @@ Markdown-документацию ведем на русском. Команды
 
 Перед открытием PR считаем `make test` обязательной проверкой. Для UI-изменений также запускаем `make dev` и вручную проверяем затронутый сценарий. Тесты бэкенда держим в `backend/tests/`, а имена тестов привязываем к проверяемому роуту, фиче или хелперу.
 
+Backend-тесты пишем на pytest и переиспользуем фикстуры из `backend/tests/conftest.py`: `client`, `session_factory`, `db_session`, `public_event_type`. Тестовые данные создаем через фабрики из `backend/tests/factories.py`, а общие хелперы вроде авторизованного клиента держим в `backend/tests/support.py`. Не поднимаем `TestClient`, engine или базовые сущности вручную в каждом тесте без необходимости.
+
+Каждый backend-тест должен оставаться изолированным: фикстуры создают in-memory SQLite-базу на тест, переопределяют `get_db` и сбрасывают rate limiter через `autouse`. Сценарные фикстуры можно объявлять рядом с тестами, а повторяемые заготовки выносить в `conftest.py` или `factories.py`.
+
 ## Правила коммитов и pull request
 
-История короткая и использует лаконичные темы вроде `Initial commit` и `создана спека и фронт`. Используем короткую императивную тему на русском или английском и держим один логический набор изменений в одном коммите.
+Коммиты оформляем по Conventional Commits: `type(scope): summary`. Используем короткий summary на русском или английском и держим один логический набор изменений в одном коммите. Подходящие типы: `feat`, `fix`, `test`, `refactor`, `docs`, `chore`, `build`, `ci`. Примеры: `feat(api): add booking filters`, `test(backend): move booking tests to fixtures`, `docs: update repository rules`.
 
 В pull request добавляем краткое описание, команды проверки, ссылку на issue или задачу при наличии и скриншоты для видимых UI-изменений. Изменения API-контракта, TypeSpec, миграций Alembic или seed-данных отмечаем явно.
 
