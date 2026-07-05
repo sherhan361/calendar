@@ -11,17 +11,18 @@ import { api } from "../../lib/api";
 import { asErrorMessage, slugify } from "../../lib/utils";
 import { useToast } from "../../components/ui/toast";
 import { policyOptions, t } from "../../lib/i18n";
-import type { ConfirmationPolicyType, EventType } from "../../lib/types";
+import type { ConfirmationPolicyType, EventType, Schedule } from "../../lib/types";
 
 type EditEventTypeDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   token: string;
   eventType: EventType;
+  schedules: Schedule[];
   onUpdated: () => void;
 };
 
-export function EditEventTypeDialog({ open, onOpenChange, token, eventType, onUpdated }: EditEventTypeDialogProps) {
+export function EditEventTypeDialog({ open, onOpenChange, token, eventType, schedules, onUpdated }: EditEventTypeDialogProps) {
   const toast = useToast();
   const [title, setTitle] = useState(eventType.title);
   const [slug, setSlug] = useState(eventType.slug);
@@ -35,8 +36,11 @@ export function EditEventTypeDialog({ open, onOpenChange, token, eventType, onUp
   const [policy, setPolicy] = useState<ConfirmationPolicyType>(eventType.confirmationPolicy.type);
   const [blockSlot, setBlockSlot] = useState(Boolean(eventType.confirmationPolicy.blockSlotBeforeConfirmation));
   const [hidden, setHidden] = useState(eventType.hidden);
+  const [scheduleId, setScheduleId] = useState(eventType.scheduleId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const scheduleOptions = schedules.map((schedule) => ({ value: schedule.id, label: schedule.name }));
 
   async function save() {
     const trimmedSlug = slugify(slug);
@@ -56,6 +60,7 @@ export function EditEventTypeDialog({ open, onOpenChange, token, eventType, onUp
         slug: trimmedSlug,
         description: description.trim() || undefined,
         durationMinutes: duration,
+        scheduleId,
         slotIntervalMinutes: slotInterval,
         minimumBookingNoticeMinutes: minNotice,
         beforeEventBufferMinutes: beforeBuffer,
@@ -105,6 +110,12 @@ export function EditEventTypeDialog({ open, onOpenChange, token, eventType, onUp
         <NumberInput label={t.eventTypes.fieldBeforeBuffer} value={beforeBuffer} onChange={setBeforeBuffer} min={0} step={5} />
         <NumberInput label={t.eventTypes.fieldAfterBuffer} value={afterBuffer} onChange={setAfterBuffer} min={0} step={5} />
         <NumberInput label={t.eventTypes.fieldRollingDays} value={rollingDays} onChange={setRollingDays} min={0} step={1} />
+        {scheduleOptions.length > 0 ? (
+          <div className="field">
+            <span className="field-label">{t.eventTypes.fieldSchedule}</span>
+            <SelectField value={scheduleId} onValueChange={setScheduleId} options={scheduleOptions} />
+          </div>
+        ) : null}
         <div className="field">
           <span className="field-label">{t.eventTypes.fieldConfirmation}</span>
           <SelectField value={policy} onValueChange={setPolicy} options={policyOptions} />

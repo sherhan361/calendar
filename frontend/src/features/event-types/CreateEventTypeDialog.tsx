@@ -27,7 +27,12 @@ export function CreateEventTypeDialog({ open, onOpenChange, token, schedules, on
   const [duration, setDuration] = useState(30);
   const [policy, setPolicy] = useState<ConfirmationPolicyType>("host");
   const [description, setDescription] = useState("Обсудим цели, объём работ и следующие шаги.");
+  const [scheduleId, setScheduleId] = useState(
+    schedules.find((schedule) => schedule.isDefault)?.id ?? schedules[0]?.id ?? "",
+  );
   const [busy, setBusy] = useState(false);
+
+  const scheduleOptions = schedules.map((schedule) => ({ value: schedule.id, label: schedule.name }));
 
   async function createEventType() {
     setBusy(true);
@@ -37,7 +42,7 @@ export function CreateEventTypeDialog({ open, onOpenChange, token, schedules, on
         slug,
         description,
         durationMinutes: duration,
-        scheduleId: schedules[0]?.id,
+        scheduleId: scheduleId || undefined,
         slotIntervalMinutes: 15,
         afterEventBufferMinutes: 15,
         confirmationPolicy: {
@@ -84,6 +89,12 @@ export function CreateEventTypeDialog({ open, onOpenChange, token, schedules, on
         <TextField label={t.eventTypes.fieldTitle} value={title} onChange={setTitle} required />
         <TextField label={t.eventTypes.fieldSlug} value={slug} onChange={(value) => setSlug(slugify(value))} required />
         <NumberInput label={t.eventTypes.fieldDuration} value={duration} onChange={setDuration} min={15} step={15} />
+        {scheduleOptions.length > 0 ? (
+          <div className="field">
+            <span className="field-label">{t.eventTypes.fieldSchedule}</span>
+            <SelectField value={scheduleId} onValueChange={setScheduleId} options={scheduleOptions} />
+          </div>
+        ) : null}
         <div className="field">
           <span className="field-label">{t.eventTypes.fieldConfirmation}</span>
           <SelectField value={policy} onValueChange={setPolicy} options={policyOptions} />

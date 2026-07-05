@@ -1,6 +1,7 @@
 import type {
   ApiError,
   ApiSuccess,
+  AvailabilityOverride,
   AvailabilityRule,
   Booking,
   BookingStatus,
@@ -14,6 +15,14 @@ import type {
   SlotsResponse,
   User,
 } from "./types";
+
+export type ScheduleInput = {
+  name: string;
+  timeZone: string;
+  isDefault?: boolean;
+  availability: AvailabilityRule[];
+  overrides?: AvailabilityOverride[];
+};
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
@@ -96,11 +105,24 @@ export const api = {
 
   listSchedules: (token: string) => request<ListResponse<Schedule>>("/schedules", { token }),
 
-  updateSchedule: (token: string, scheduleId: string, payload: { availability: AvailabilityRule[] }) =>
+  createSchedule: (token: string, payload: ScheduleInput) =>
+    request<Schedule>("/schedules", {
+      method: "POST",
+      token,
+      body: payload,
+    }),
+
+  updateSchedule: (token: string, scheduleId: string, payload: Partial<ScheduleInput>) =>
     request<Schedule>(`/schedules/${scheduleId}`, {
       method: "PATCH",
       token,
       body: payload,
+    }),
+
+  deleteSchedule: (token: string, scheduleId: string) =>
+    request<void>(`/schedules/${scheduleId}`, {
+      method: "DELETE",
+      token,
     }),
 
   listEventTypes: (token: string) => request<ListResponse<EventType>>("/event-types?includeHidden=true", { token }),

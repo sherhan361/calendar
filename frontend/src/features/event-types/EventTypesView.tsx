@@ -50,7 +50,14 @@ export function EventTypesView({ token, user, schedules, eventTypes, onChanged }
       ) : (
         <div className="event-list">
           {filtered.map((eventType) => (
-            <EventTypeRow key={eventType.id} token={token} user={user} eventType={eventType} onChanged={onChanged} />
+            <EventTypeRow
+              key={eventType.id}
+              token={token}
+              user={user}
+              eventType={eventType}
+              schedules={schedules}
+              onChanged={onChanged}
+            />
           ))}
         </div>
       )}
@@ -70,11 +77,13 @@ function EventTypeRow({
   token,
   user,
   eventType,
+  schedules,
   onChanged,
 }: {
   token: string;
   user: User;
   eventType: EventType;
+  schedules: Schedule[];
   onChanged: () => void;
 }) {
   const toast = useToast();
@@ -180,6 +189,7 @@ function EventTypeRow({
         onOpenChange={setEditOpen}
         token={token}
         eventType={eventType}
+        schedules={schedules}
         onUpdated={onChanged}
       />
 
