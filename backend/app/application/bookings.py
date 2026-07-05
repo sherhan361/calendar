@@ -8,6 +8,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.responses import ApiException
+from app.application.events import (
+    BOOKING_CANCELLED,
+    BOOKING_CONFIRMED,
+    BOOKING_CREATED,
+    BOOKING_DECLINED,
+    emit_booking_event,
+)
 from app.application.slots import event_type_slot_is_available
 from app.db.models import Booking, EventType, ShareLink, User
 from app.domain.calendar import (
@@ -73,6 +80,7 @@ def create_booking(db: Session, body: CreateBookingRequest) -> Booking:
         db.rollback()
         return _resolve_booking_conflict(db, body, event_type.id, start, exc)
     db.refresh(booking)
+    emit_booking_event(booking, BOOKING_CREATED)
     return booking
 
 
@@ -120,6 +128,7 @@ def confirm_booking(db: Session, owner_id: str, booking_uid: str) -> Booking:
         raise _api_error(exc) from exc
     db.commit()
     db.refresh(booking)
+    emit_booking_event(booking, BOOKING_CONFIRMED)
     return booking
 
 
@@ -132,6 +141,7 @@ def decline_booking(db: Session, owner_id: str, booking_uid: str, body: BookingA
     booking.rejection_reason = body.reason or "Declined by host"
     db.commit()
     db.refresh(booking)
+    emit_booking_event(booking, BOOKING_DECLINED)
     return booking
 
 
@@ -144,6 +154,7 @@ def cancel_booking(db: Session, owner_id: str, booking_uid: str, body: BookingAc
     booking.cancellation_reason = body.reason or "Cancelled by host"
     db.commit()
     db.refresh(booking)
+    emit_booking_event(booking, BOOKING_CANCELLED)
     return booking
 
 
@@ -156,6 +167,7 @@ def confirm_attendee(db: Session, booking_uid: str, token: str) -> Booking:
     booking.attendee_confirmed_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(booking)
+    emit_booking_event(booking, BOOKING_CONFIRMED)
     return booking
 
 
@@ -169,6 +181,7 @@ def cancel_attendee(db: Session, booking_uid: str, token: str, body: BookingActi
     booking.cancellation_reason = reason or None
     db.commit()
     db.refresh(booking)
+    emit_booking_event(booking, BOOKING_CANCELLED)
     return booking
 
 

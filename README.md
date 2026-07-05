@@ -30,3 +30,16 @@ make dev
 
 - Email: `demo@example.com`
 - Password: `demo`
+
+## Booking events (уведомления)
+
+Application-слой бронирований эмитит события жизненного цикла (`created`, `confirmed`, `declined`, `cancelled`) через `backend/app/application/events.py`. По умолчанию используется `LoggingBookingNotifier`, который ничего не отправляет наружу и только пишет в лог — это безопасно для local/dev.
+
+Событие (`BookingEvent`) содержит минимальные данные для будущих уведомлений: `booking_uid`, `event_type_id`, `event_type_title`, хост (`host_username`, `host_email`), участник (`attendee_name`, `attendee_email`), `start`, `end`, `status` и `reason` (если есть).
+
+Чтобы подключить реальный notifier (SMTP, календарный провайдер, вебхук) позже:
+
+1. Реализуйте класс с методом `notify(self, event: BookingEvent) -> None`, удовлетворяющий протоколу `BookingNotifier`.
+2. Зарегистрируйте его на старте приложения через `set_booking_notifier(MyNotifier())` (например, в `backend/app/main.py`).
+
+Ошибки notifier перехватываются и логируются, чтобы не ломать основной booking flow.
