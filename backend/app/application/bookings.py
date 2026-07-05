@@ -123,6 +123,24 @@ def get_owned_booking(db: Session, owner_id: str, booking_uid: str) -> Booking:
 
 
 def _resolve_event_type_for_booking(db: Session, body: CreateBookingRequest) -> EventType | None:
+    if body.shareToken:
+        link = db.scalar(select(ShareLink).where(ShareLink.token == body.shareToken))
+        if link is None:
+            return None
+        if is_share_link_expired(link):
+            raise ApiException(410, "link_expired", "Share link is expired.")
+
+        statement = select(EventType).where(EventType.id == link.event_type_id)
+        if body.eventTypeId:
+            statement = statement.where(EventType.id == body.eventTypeId)
+        if body.username or body.eventTypeSlug:
+            statement = statement.join(EventType.owner)
+            if body.username:
+                statement = statement.where(User.username == body.username)
+            if body.eventTypeSlug:
+                statement = statement.where(EventType.slug == body.eventTypeSlug)
+        return db.scalar(statement)
+
     if body.eventTypeId:
         return db.scalar(select(EventType).where(EventType.id == body.eventTypeId, EventType.hidden.is_(False)))
     if body.username and body.eventTypeSlug:
@@ -131,11 +149,6 @@ def _resolve_event_type_for_booking(db: Session, body: CreateBookingRequest) -> 
             .join(EventType.owner)
             .where(User.username == body.username, EventType.slug == body.eventTypeSlug, EventType.hidden.is_(False))
         )
-    if body.shareToken:
-        link = db.scalar(select(ShareLink).where(ShareLink.token == body.shareToken))
-        if link is None:
-            return None
-        return db.scalar(select(EventType).where(EventType.id == link.event_type_id, EventType.hidden.is_(False)))
     return None
 
 

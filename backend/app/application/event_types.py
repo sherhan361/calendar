@@ -86,11 +86,11 @@ def delete_event_type(db: Session, owner_id: str, event_type_id: str) -> None:
 
 
 def get_public_event_type(db: Session, username: str, slug: str, share_token: str | None) -> EventType:
-    event_type = db.scalar(
-        select(EventType)
-        .join(EventType.owner)
-        .where(User.username == username, EventType.slug == slug, EventType.hidden.is_(False))
-    )
+    filters = [User.username == username, EventType.slug == slug]
+    if share_token is None:
+        filters.append(EventType.hidden.is_(False))
+
+    event_type = db.scalar(select(EventType).join(EventType.owner).where(*filters))
     if event_type is None:
         raise ApiException(404, "not_found", "Event type not found.")
     if share_token:
