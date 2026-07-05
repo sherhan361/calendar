@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tabs } from "@base-ui-components/react/tabs";
 import { Button } from "../../components/ui/Button";
 import { Modal, DialogClose } from "../../components/ui/Modal";
@@ -9,6 +9,7 @@ import { api } from "../../lib/api";
 import { asErrorMessage } from "../../lib/utils";
 import { bookingStatusLabel, t } from "../../lib/i18n";
 import { formatDateTime } from "../../lib/datetime";
+import type { ListBookingsFilters } from "../../lib/api";
 import type { Booking } from "../../lib/types";
 
 type BookingTab = "upcoming" | "unconfirmed" | "past" | "cancelled";
@@ -24,14 +25,24 @@ type BookingsQueueProps = {
 export function BookingsQueue({ token, bookings, onChanged }: BookingsQueueProps) {
   const toast = useToast();
   const [tab, setTab] = useState<BookingTab>("upcoming");
+  const [visibleBookings, setVisibleBookings] = useState(bookings);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [appliedFilters, setAppliedFilters] = useState<ListBookingsFilters>({});
   const [reasonAction, setReasonAction] = useState<ReasonAction | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [filterBusy, setFilterBusy] = useState(false);
 
   const now = Date.now();
+  const hasAppliedFilters = Boolean(appliedFilters.from || appliedFilters.to);
+
+  useEffect(() => {
+    if (!hasAppliedFilters) setVisibleBookings(bookings);
+  }, [bookings, hasAppliedFilters]);
 
   const filtered = useMemo(() => {
-    return bookings.filter((booking) => {
+    return visibleBookings.filter((booking) => {
       const start = new Date(booking.start).getTime();
       switch (tab) {
         case "upcoming":
@@ -48,13 +59,14 @@ export function BookingsQueue({ token, bookings, onChanged }: BookingsQueueProps
         }
       }
     });
-  }, [bookings, tab, now]);
+  }, [visibleBookings, tab, now]);
 
   async function confirm(uid: string) {
     setBusy(true);
     try {
       await api.confirmBooking(token, uid);
       toast.success(t.bookings.confirmed);
+      await reloadBookings();
       onChanged();
     } catch (error) {
       toast.error(t.bookings.confirmError, asErrorMessage(error));
@@ -80,6 +92,7 @@ export function BookingsQueue({ token, bookings, onChanged }: BookingsQueueProps
         toast.success(t.bookings.cancelled);
       }
       setReasonAction(null);
+      await reloadBookings();
       onChanged();
     } catch (error) {
       toast.error(t.bookings.actionError, asErrorMessage(error));
@@ -88,7 +101,44 @@ export function BookingsQueue({ token, bookings, onChanged }: BookingsQueueProps
     }
   }
 
+  async function applyFilters() {
+    const nextFilters = {
+      ...(dateFrom ? { from: dateFrom } : {}),
+      ...(dateTo ? { to: dateTo } : {}),
+    };
+    setFilterBusy(true);
+    try {
+      await reloadBookings(nextFilters);
+      setAppliedFilters(nextFilters);
+    } catch (error) {
+      toast.error(t.bookings.filterError, asErrorMessage(error));
+    } finally {
+      setFilterBusy(false);
+    }
+  }
+
+  async function clearFilters() {
+    setDateFrom("");
+    setDateTo("");
+    setFilterBusy(true);
+    try {
+      await reloadBookings({});
+      setAppliedFilters({});
+      onChanged();
+    } catch (error) {
+      toast.error(t.bookings.filterError, asErrorMessage(error));
+    } finally {
+      setFilterBusy(false);
+    }
+  }
+
+  async function reloadBookings(filters = appliedFilters) {
+    const nextBookings = await api.listBookings(token, filters);
+    setVisibleBookings(nextBookings.items);
+  }
+
   const empty = emptyStateForTab(tab);
+  const hasDateFilters = Boolean(dateFrom || dateTo || appliedFilters.from || appliedFilters.to);
 
   return (
     <div className="cal-panel">
@@ -108,9 +158,22 @@ export function BookingsQueue({ token, bookings, onChanged }: BookingsQueueProps
               {t.bookings.tabs.cancelled}
             </Tabs.Tab>
           </Tabs.List>
-          <Button variant="secondary" size="sm">
-            {t.common.filter}
-          </Button>
+          <div className="bookings-filter-controls">
+            <div className="booking-date-filter">
+              <TextField label={t.bookings.filterFrom} type="date" value={dateFrom} onChange={setDateFrom} />
+            </div>
+            <div className="booking-date-filter">
+              <TextField label={t.bookings.filterTo} type="date" value={dateTo} onChange={setDateTo} />
+            </div>
+            <div className="bookings-filter-actions">
+              <Button variant="secondary" size="sm" disabled={filterBusy} onClick={() => void applyFilters()}>
+                {filterBusy ? t.common.syncing : t.common.filter}
+              </Button>
+              <Button variant="ghost" size="sm" disabled={filterBusy || !hasDateFilters} onClick={() => void clearFilters()}>
+                {t.common.clear}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {["upcoming", "unconfirmed", "past", "cancelled"].map((value) => (

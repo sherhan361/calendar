@@ -66,6 +66,12 @@ export type CreateBookingInput = {
   };
 };
 
+export type ListBookingsFilters = {
+  status?: BookingStatus;
+  from?: string;
+  to?: string;
+};
+
 export const api = {
   register: (payload: RegisterInput) =>
     request<LoginResponse>("/auth/register", {
@@ -124,8 +130,12 @@ export const api = {
 
   getPublicShareLink: (token: string) => request<PublicShareLink>(`/public/share-links/${token}`),
 
-  listBookings: (token: string, status?: BookingStatus) => {
-    const query = status ? `?status=${status}` : "";
+  listBookings: (token: string, filters: ListBookingsFilters = {}) => {
+    const search = new URLSearchParams();
+    if (filters.status) search.set("status", filters.status);
+    if (filters.from) search.set("from", filters.from);
+    if (filters.to) search.set("to", filters.to);
+    const query = search.toString() ? `?${search.toString()}` : "";
     return request<ListResponse<Booking>>(`/bookings${query}`, { token });
   },
 

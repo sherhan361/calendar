@@ -5,7 +5,7 @@ type TextFieldProps = {
   label: ReactNode;
   value: string;
   onChange: (value: string) => void;
-  type?: "text" | "email" | "password" | "time";
+  type?: "text" | "email" | "password" | "time" | "date";
   placeholder?: string;
   required?: boolean;
   multiline?: boolean;
