@@ -64,6 +64,24 @@ docker compose up -d --build    # пересобрать и обновить
 
 Все переменные и значения по умолчанию описаны в `.env.example`. Ключевые: `CALENDAR_JWT_SECRET` (обязательна), `WEB_PORT`, `CALENDAR_DATABASE_URL`, `CALENDAR_CORS_ORIGINS`, `VITE_API_URL`.
 
+## Деплой на Render
+
+В корне есть `render.yaml` для Render Blueprint:
+
+- `calendar-api` - Docker web service для FastAPI, миграции Alembic применяются при старте.
+- `calendar-web` - static site для Vite-сборки React.
+- `VITE_API_URL` и `CALENDAR_CORS_ORIGINS` связываются через URL сервисов Render.
+- SQLite хранится в `/app/data/calendar.sqlite` на persistent disk `calendar-data`.
+
+Важно: persistent disk доступен только для paid web service на Render. Если нужен полностью бесплатный демо-деплой, удалите блок `disk` у `calendar-api` и замените `plan: starter` на бесплатный план, но данные SQLite будут теряться при рестартах и редеплоях.
+
+Порядок деплоя:
+
+1. Закоммитьте и отправьте `render.yaml` в GitHub.
+2. Откройте Blueprint: `https://dashboard.render.com/blueprint/new?repo=https://github.com/sherhan361/calendar`.
+3. Проверьте сервисы и нажмите `Apply`.
+4. После деплоя проверьте `https://<calendar-api>.onrender.com/healthz` и откройте URL `calendar-web`.
+
 ## Booking events (уведомления)
 
 Application-слой бронирований эмитит события жизненного цикла (`created`, `confirmed`, `declined`, `cancelled`) через `backend/app/application/events.py`. По умолчанию используется `LoggingBookingNotifier`, который ничего не отправляет наружу и только пишет в лог — это безопасно для local/dev.
