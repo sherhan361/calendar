@@ -1211,6 +1211,39 @@ a {
   place-items: center;
 }
 
+.profile-shell {
+  display: grid;
+  place-items: start center;
+}
+
+.profile {
+  display: grid;
+  gap: 24px;
+  max-width: 560px;
+  width: 100%;
+}
+
+.profile-head {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.profile-event-list {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-event {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
 .booking-reason {
   font-style: italic;
 }

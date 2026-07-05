@@ -111,6 +111,11 @@ export type PublicEventType = {
   bookingUrl: string;
 };
 
+export type PublicUserPage = {
+  user: PublicUser;
+  eventTypes: PublicEventType[];
+};
+
 export type ShareLink = {
   id: string;
   eventTypeId: string;

@@ -12,6 +12,10 @@ export type AppRoute =
       kind: "public-cancel";
       uid: string;
       token: string;
+    }
+  | {
+      kind: "public-profile";
+      username: string;
     };
 
 export function parseRoute(): AppRoute {
@@ -32,6 +36,12 @@ export function parseRoute(): AppRoute {
       kind: "public-cancel",
       uid: parts[1],
       token: params.get("token") ?? "",
+    };
+  }
+  if (parts[0] === "u" && parts[1]) {
+    return {
+      kind: "public-profile",
+      username: parts[1],
     };
   }
   return { kind: "app" };

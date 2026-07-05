@@ -122,6 +122,18 @@ def delete_event_type(db: Session, owner_id: str, event_type_id: str) -> None:
     db.commit()
 
 
+def get_public_user_page(db: Session, username: str) -> tuple[User, list[EventType]]:
+    user = db.scalar(select(User).where(User.username == username))
+    if user is None:
+        raise ApiException(404, "not_found", "User not found.")
+    event_types = db.scalars(
+        select(EventType)
+        .where(EventType.owner_id == user.id, EventType.hidden.is_(False))
+        .order_by(EventType.created_at.asc())
+    ).all()
+    return user, list(event_types)
+
+
 def get_public_event_type(db: Session, username: str, slug: str, share_token: str | None) -> EventType:
     filters = [User.username == username, EventType.slug == slug]
     if share_token is None:

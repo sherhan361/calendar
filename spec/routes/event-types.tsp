@@ -47,3 +47,13 @@ interface PublicEventTypes {
   get(@path username: Username, @path slug: Slug, @query shareToken?: PublicToken):
     Ok<PublicEventType> | NotFoundError | GoneError;
 }
+
+@route("/public/users")
+@tag("Public Event Types")
+interface PublicUsers {
+  @summary("Get public user profile with visible event types")
+  @operationId("PublicUsers_get")
+  @get
+  @route("{username}")
+  get(@path username: Username): Ok<PublicUserPage> | NotFoundError;
+}

@@ -10,6 +10,7 @@ import type {
   ListResponse,
   PublicEventType,
   PublicShareLink,
+  PublicUserPage,
   Schedule,
   ShareLink,
   SlotsResponse,
@@ -191,6 +192,9 @@ export const api = {
       token,
       body: { reason },
     }),
+
+  getPublicUserPage: (username: string) =>
+    request<PublicUserPage>(`/public/users/${encodeURIComponent(username)}`),
 
   getPublicEventType: (username: string, slug: string, shareToken?: string) => {
     const query = shareToken ? `?shareToken=${shareToken}` : "";

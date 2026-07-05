@@ -20,6 +20,11 @@ model PublicUser {
   timeZone: TimeZone;
 }
 
+model PublicUserPage {
+  user: PublicUser;
+  eventTypes: PublicEventType[];
+}
+
 model RegisterRequest {
   email: Email;
   username: Username;

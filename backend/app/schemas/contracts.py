@@ -215,6 +215,11 @@ class PublicEventType(BaseModel):
     bookingUrl: str
 
 
+class PublicUserPage(BaseModel):
+    user: PublicUser
+    eventTypes: list[PublicEventType]
+
+
 class CreateEventTypeRequest(BaseModel):
     title: str
     slug: Slug

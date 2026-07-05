@@ -11,7 +11,7 @@ from app.application import event_types as event_type_use_cases
 from app.db.models import EventType, User
 from app.db.session import get_db
 from app.schemas.contracts import CreateEventTypeRequest, UpdateEventTypeRequest
-from app.services.mappers import map_event_type, map_public_event_type
+from app.services.mappers import map_event_type, map_public_event_type, map_public_user
 
 
 router = APIRouter(tags=["Event Types"])
@@ -67,6 +67,20 @@ def delete_event_type(
 ) -> Response:
     event_type_use_cases.delete_event_type(db, user.id, event_type_id)
     return Response(status_code=204)
+
+
+@router.get("/public/users/{username}", tags=["Public Event Types"])
+def get_public_user_page(
+    username: str,
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    user, event_types = event_type_use_cases.get_public_user_page(db, username)
+    return success(
+        {
+            "user": map_public_user(user),
+            "eventTypes": [map_public_event_type(event_type) for event_type in event_types],
+        }
+    )
 
 
 @router.get("/public/users/{username}/event-types/{slug}", tags=["Public Event Types"])

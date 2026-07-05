@@ -9,6 +9,7 @@ import { AvailabilityEditor } from "../features/availability/AvailabilityEditor"
 import { BookingsQueue } from "../features/bookings/BookingsQueue";
 import { PublicBookingPage } from "../features/public-booking/PublicBookingPage";
 import { CancelBookingPage } from "../features/public-booking/CancelBookingPage";
+import { PublicProfilePage } from "../features/public-booking/PublicProfilePage";
 import { Button } from "../components/ui/Button";
 import { IconAvailability, IconBookings, IconEventTypes } from "../components/ui/icons";
 import { initials } from "../lib/utils";
@@ -24,6 +25,8 @@ export default function App() {
         <PublicBookingPage route={route} />
       ) : route.kind === "public-cancel" ? (
         <CancelBookingPage route={route} />
+      ) : route.kind === "public-profile" ? (
+        <PublicProfilePage route={route} />
       ) : (
         <PrivateApp />
       )}
