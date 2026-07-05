@@ -166,6 +166,62 @@ def test_cancelled_slot_can_be_rebooked(
     assert len(active) == 1
 
 
+def test_success_response_exposes_status_title_and_time(
+    context: tuple[TestClient, sessionmaker[Session], EventType],
+) -> None:
+    client, _, _ = context
+
+    response = client.post("/bookings", json=_payload())
+
+    assert response.status_code == 201
+    data = response.json()["data"]
+    assert data["title"] == "Discovery call"
+    assert data["status"] == "confirmed"
+    assert data["start"].startswith("2099-01-05T09:00:00")
+    assert data["durationMinutes"] == 30
+
+
+def test_blank_attendee_name_is_rejected(
+    context: tuple[TestClient, sessionmaker[Session], EventType],
+) -> None:
+    client, testing_session, _ = context
+    body = _payload()
+    body["attendee"] = {"name": "   ", "email": "guest@example.com", "timeZone": "UTC"}
+
+    response = client.post("/bookings", json=body)
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "validation_error"
+    with testing_session() as db:
+        assert db.scalars(select(Booking)).all() == []
+
+
+def test_invalid_attendee_email_is_rejected(
+    context: tuple[TestClient, sessionmaker[Session], EventType],
+) -> None:
+    client, _, _ = context
+    body = _payload()
+    body["attendee"] = {"name": "Guest", "email": "not-an-email", "timeZone": "UTC"}
+
+    response = client.post("/bookings", json=body)
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+def test_attendee_name_is_trimmed(
+    context: tuple[TestClient, sessionmaker[Session], EventType],
+) -> None:
+    client, _, _ = context
+    body = _payload()
+    body["attendee"] = {"name": "  Ada Lovelace  ", "email": "ada@example.com", "timeZone": "UTC"}
+
+    response = client.post("/bookings", json=body)
+
+    assert response.status_code == 201
+    assert response.json()["data"]["attendee"]["name"] == "Ada Lovelace"
+
+
 def _seed_public_event_type(db: Session) -> EventType:
     user = User(
         email="host@example.com",

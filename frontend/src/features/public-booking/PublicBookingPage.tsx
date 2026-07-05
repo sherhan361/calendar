@@ -7,7 +7,7 @@ import { TextField } from "../../components/ui/TextField";
 import { SelectField } from "../../components/ui/SelectField";
 import { IconClock } from "../../components/ui/icons";
 import { api, ApiRequestError } from "../../lib/api";
-import { asErrorMessage, initials, cx, newIdempotencyKey } from "../../lib/utils";
+import { asErrorMessage, initials, cx, isValidEmail, newIdempotencyKey } from "../../lib/utils";
 import {
   addDays,
   browserTimeZone,
@@ -18,7 +18,7 @@ import {
   timeZoneOptions,
   zonedDayKey,
 } from "../../lib/datetime";
-import { confirmationPolicyLabel, t } from "../../lib/i18n";
+import { bookingStatusLabel, confirmationPolicyLabel, t } from "../../lib/i18n";
 import type { AppRoute } from "../../app/router";
 import type { Booking, PublicEventType, Slot } from "../../lib/types";
 
@@ -51,8 +51,8 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
-  const [name, setName] = useState("Гость");
-  const [email, setEmail] = useState("guest@example.com");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [createdBooking, setCreatedBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
@@ -115,14 +115,33 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
     setSelectedSlot(slot);
   }
 
+  function updateName(value: string) {
+    setName(value);
+    if (error) setError("");
+  }
+
+  function updateEmail(value: string) {
+    setEmail(value);
+    if (error) setError("");
+  }
+
   async function submitBooking(event: FormEvent) {
     event.preventDefault();
     if (!eventType || !selectedSlot || booking) return;
+    setError("");
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError(t.public.nameRequired);
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError(t.public.emailInvalid);
+      return;
+    }
     if (idempotencyKeyRef.current === null) {
       idempotencyKeyRef.current = newIdempotencyKey();
     }
     setBooking(true);
-    setError("");
     try {
       const created = await api.createBooking({
         username: route.username,
@@ -131,7 +150,7 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
         start: selectedSlot.start,
         durationMinutes: eventType.durationMinutes,
         idempotencyKey: idempotencyKeyRef.current,
-        attendee: { name, email, timeZone },
+        attendee: { name: trimmedName, email: email.trim(), timeZone },
       });
       idempotencyKeyRef.current = null;
       setCreatedBooking(created);
@@ -190,8 +209,13 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
             <div className="success-state">
               <div className="success-badge">✓</div>
               <h2>{createdBooking.status === "confirmed" ? t.public.confirmed : t.public.requestSent}</h2>
+              <p className="success-event">{createdBooking.title}</p>
               <p className="muted">
                 {formatDateTime(createdBooking.start, timeZone)} ({timeZone})
+              </p>
+              <p className="muted">
+                {createdBooking.durationMinutes} {t.public.minutes} · {t.public.statusLabel}:{" "}
+                {bookingStatusLabel(createdBooking.status)}
               </p>
               {createdBooking.status !== "confirmed" ? <p className="muted">{t.public.pendingHint}</p> : null}
               <a className={buttonClass("secondary")} href="#">
@@ -222,8 +246,21 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
                     <p className="muted">
                       {formatTime(selectedSlot.start, timeZone)} – {formatTime(selectedSlot.end, timeZone)}
                     </p>
-                    <TextField label={t.public.name} value={name} onChange={setName} required />
-                    <TextField label={t.public.email} type="email" value={email} onChange={setEmail} required />
+                    <TextField
+                      label={t.public.name}
+                      value={name}
+                      onChange={updateName}
+                      placeholder={t.public.namePlaceholder}
+                      required
+                    />
+                    <TextField
+                      label={t.public.email}
+                      type="email"
+                      value={email}
+                      onChange={updateEmail}
+                      placeholder={t.public.emailPlaceholder}
+                      required
+                    />
                     <div className="button-row">
                       <Button variant="ghost" onClick={() => chooseSlot(null)}>
                         {t.common.back}

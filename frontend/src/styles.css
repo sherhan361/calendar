@@ -1201,6 +1201,11 @@ a {
   max-width: 420px;
 }
 
+.success-event {
+  font-weight: 600;
+  font-size: 16px;
+}
+
 .success-badge {
   display: inline-grid;
   width: 44px;

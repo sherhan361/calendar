@@ -28,6 +28,10 @@ export function asErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unexpected error";
 }
 
+export function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export function newIdempotencyKey() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();

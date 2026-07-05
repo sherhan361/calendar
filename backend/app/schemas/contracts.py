@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Generic, TypeVar
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 Uuid = Annotated[str, Field(pattern=r"^[0-9a-fA-F-]{36}$")]
@@ -288,10 +288,23 @@ class SlotsResponse(BaseModel):
     days: list[SlotsByDate]
 
 
+MAX_ATTENDEE_NAME_LENGTH = 255
+
+
 class BookingAttendeeInput(BaseModel):
     name: str
     email: EmailStr
     timeZone: TimeZone
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Attendee name must not be blank.")
+        if len(stripped) > MAX_ATTENDEE_NAME_LENGTH:
+            raise ValueError(f"Attendee name must be at most {MAX_ATTENDEE_NAME_LENGTH} characters.")
+        return stripped
 
 
 class BookingAttendee(BaseModel):

@@ -9,7 +9,10 @@ enum BookingStatus {
 }
 
 model BookingAttendeeInput {
+  @minLength(1)
+  @maxLength(255)
   name: string;
+
   email: Email;
   timeZone: TimeZone;
 }
