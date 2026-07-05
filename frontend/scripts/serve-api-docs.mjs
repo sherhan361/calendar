@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rootDir = resolve(frontendDir, "..");
+const specDir = join(rootDir, "spec");
 const outputDir = process.env.OPENAPI_OUT_DIR || join(tmpdir(), "calendar-typespec-output");
 const openapiDir = join(outputDir, "@typespec", "openapi3");
 const openapiJsonPath = join(openapiDir, "calendar.openapi.json");
@@ -62,9 +63,9 @@ function getPort() {
 }
 
 function compileTypeSpec() {
-  const tspBin = join(frontendDir, "node_modules", ".bin", "tsp");
-  const result = spawnSync(tspBin, ["compile", "spec", "--output-dir", outputDir], {
-    cwd: rootDir,
+  const tspBin = join(specDir, "node_modules", ".bin", "tsp");
+  const result = spawnSync(tspBin, ["compile", ".", "--output-dir", outputDir], {
+    cwd: specDir,
     stdio: "inherit",
   });
 

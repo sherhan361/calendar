@@ -5,9 +5,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc -b && vite build",
-    "typespec:compile": "tsp compile ../spec --output-dir /tmp/calendar-typespec-output",
     "docs": "node scripts/serve-api-docs.mjs",
-    "test": "npm run typespec:compile && npm run build"
+    "test": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -23,7 +22,6 @@
   "homepage": "https://github.com/sherhan361/calendar#readme",
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-rc.0",
-    "@typespec/openapi3": "^1.11.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

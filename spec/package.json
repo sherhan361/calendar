@@ -1,0 +1,15 @@
+{
+  "name": "calendar-spec",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeSpec API contract for the Calendar app",
+  "scripts": {
+    "compile": "tsp compile . --output-dir /tmp/calendar-typespec-output"
+  },
+  "dependencies": {
+    "@typespec/compiler": "^1.11.0",
+    "@typespec/http": "^1.11.0",
+    "@typespec/openapi": "^1.11.0",
+    "@typespec/openapi3": "^1.11.0"
+  }
+}

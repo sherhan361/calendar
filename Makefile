@@ -3,6 +3,7 @@ PYTHON ?= python3
 PORT ?= 8080
 FRONTEND_DIR := frontend
 BACKEND_DIR := backend
+SPEC_DIR := spec
 BACKEND_PYTHON ?= .venv/bin/python
 
 .DEFAULT_GOAL := help
@@ -27,6 +28,7 @@ help:
 
 install:
 	$(NPM) --prefix $(FRONTEND_DIR) install
+	$(NPM) --prefix $(SPEC_DIR) install
 	$(PYTHON) -m venv $(BACKEND_DIR)/.venv
 	cd $(BACKEND_DIR) && $(BACKEND_PYTHON) -m pip install -e ".[dev]"
 
@@ -54,7 +56,7 @@ db-reset:
 	$(MAKE) db-seed
 
 typespec-compile:
-	$(NPM) --prefix $(FRONTEND_DIR) run typespec:compile
+	$(NPM) --prefix $(SPEC_DIR) run compile
 
 compile: typespec-compile
 
