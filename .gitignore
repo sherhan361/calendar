@@ -12,6 +12,7 @@ backend/.pytest_cache/
 backend/**/__pycache__/
 .pytest_cache/
 .DS_Store
+.env
 
 # Local legacy mock database
 prisma/dev.db

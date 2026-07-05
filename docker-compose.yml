@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    image: calendar-backend:latest
+    restart: unless-stopped
+    environment:
+      CALENDAR_DATABASE_URL: ${CALENDAR_DATABASE_URL:-sqlite:////app/data/calendar.sqlite}
+      CALENDAR_JWT_SECRET: ${CALENDAR_JWT_SECRET:?set a strong secret of at least 32 bytes}
+      CALENDAR_CORS_ORIGINS: ${CALENDAR_CORS_ORIGINS:-}
+      CALENDAR_ACCESS_TOKEN_EXPIRE_MINUTES: ${CALENDAR_ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
+      CALENDAR_BOOKING_RATE_LIMIT_MAX: ${CALENDAR_BOOKING_RATE_LIMIT_MAX:-5}
+      CALENDAR_BOOKING_RATE_LIMIT_WINDOW_SECONDS: ${CALENDAR_BOOKING_RATE_LIMIT_WINDOW_SECONDS:-60}
+      CALENDAR_SEED_ON_START: ${CALENDAR_SEED_ON_START:-false}
+    volumes:
+      - calendar-data:/app/data
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    image: calendar-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+volumes:
+  calendar-data:
