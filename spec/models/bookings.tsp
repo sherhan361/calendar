@@ -40,6 +40,7 @@ model Booking {
   meetingUrl?: string;
   cancellationReason?: string;
   rejectionReason?: string;
+  manageToken?: string;
   createdAt: utcDateTime;
   updatedAt: utcDateTime;
 }

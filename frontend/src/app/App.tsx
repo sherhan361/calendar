@@ -8,6 +8,7 @@ import { EventTypesView } from "../features/event-types/EventTypesView";
 import { AvailabilityEditor } from "../features/availability/AvailabilityEditor";
 import { BookingsQueue } from "../features/bookings/BookingsQueue";
 import { PublicBookingPage } from "../features/public-booking/PublicBookingPage";
+import { CancelBookingPage } from "../features/public-booking/CancelBookingPage";
 import { Button } from "../components/ui/Button";
 import { IconAvailability, IconBookings, IconEventTypes } from "../components/ui/icons";
 import { initials } from "../lib/utils";
@@ -19,7 +20,13 @@ export default function App() {
   const route = useHashRoute();
   return (
     <ToastProvider>
-      {route.kind === "public-booking" ? <PublicBookingPage route={route} /> : <PrivateApp />}
+      {route.kind === "public-booking" ? (
+        <PublicBookingPage route={route} />
+      ) : route.kind === "public-cancel" ? (
+        <CancelBookingPage route={route} />
+      ) : (
+        <PrivateApp />
+      )}
     </ToastProvider>
   );
 }

@@ -191,6 +191,12 @@ export const api = {
       method: "POST",
       body: payload,
     }),
+
+  cancelBookingPublic: (uid: string, token: string, reason?: string) =>
+    request<Booking>(`/public/bookings/${uid}/cancel?token=${encodeURIComponent(token)}`, {
+      method: "POST",
+      body: { reason },
+    }),
 };
 
 type RequestOptions = {

@@ -164,3 +164,7 @@ def map_booking(booking: Booking) -> dict[str, object]:
             "updatedAt": map_datetime(booking.updated_at),
         }
     )
+
+
+def map_booking_with_manage_token(booking: Booking) -> dict[str, object]:
+    return {**map_booking(booking), "manageToken": booking.attendee_token}

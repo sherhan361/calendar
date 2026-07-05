@@ -201,6 +201,11 @@ export function BookingsQueue({ token, bookings, onChanged }: BookingsQueueProps
                         {formatDateTime(booking.start, booking.attendee.timeZone)} · {booking.attendee.name} (
                         {booking.attendee.email})
                       </p>
+                      {booking.status === "cancelled" && booking.cancellationReason ? (
+                        <p className="muted booking-reason">
+                          {t.bookings.cancellationReason}: {booking.cancellationReason}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="button-row">
                       {booking.status === "pending_host" ? (

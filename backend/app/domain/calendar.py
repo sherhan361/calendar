@@ -327,7 +327,7 @@ def host_decline_status(current_status: str) -> str:
     raise DomainRuleError("conflict", "Booking cannot be declined.")
 
 
-def host_cancel_status(current_status: str) -> str:
+def cancel_status(current_status: str) -> str:
     if current_status in {"cancelled", "declined"}:
         raise DomainRuleError("conflict", "Booking cannot be cancelled.")
     return "cancelled"

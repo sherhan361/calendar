@@ -103,6 +103,7 @@ export const t = {
     confirmed: "Бронирование подтверждено",
     declined: "Бронирование отклонено",
     cancelled: "Бронирование отменено",
+    cancellationReason: "Причина отмены",
     actionError: "Не удалось выполнить действие",
     confirmError: "Не удалось подтвердить",
   },
@@ -128,6 +129,18 @@ export const t = {
     statusLabel: "Статус",
     backHome: "На главную",
     minutes: "мин",
+    cancelBookingLink: "Отменить встречу",
+    cancel: {
+      title: "Отмена встречи",
+      intro: "Вы можете отменить эту встречу. При желании укажите причину.",
+      reasonLabel: "Причина отмены (необязательно)",
+      reasonPlaceholder: "Будет отправлено организатору",
+      submit: "Отменить встречу",
+      submitting: "Отмена…",
+      success: "Встреча отменена",
+      successHint: "Организатор получит уведомление об отмене.",
+      invalidLink: "Ссылка отмены недействительна.",
+    },
   },
 } as const;
 

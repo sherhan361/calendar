@@ -14,8 +14,8 @@ from app.domain.calendar import (
     ACTIVE_BOOKING_STATUSES,
     DomainRuleError,
     attendee_confirm_status,
+    cancel_status,
     ensure_utc,
-    host_cancel_status,
     host_confirm_status,
     host_decline_status,
     initial_booking_status,
@@ -138,7 +138,7 @@ def decline_booking(db: Session, owner_id: str, booking_uid: str, body: BookingA
 def cancel_booking(db: Session, owner_id: str, booking_uid: str, body: BookingActionRequest) -> Booking:
     booking = get_owned_booking(db, owner_id, booking_uid)
     try:
-        booking.status = host_cancel_status(booking.status)
+        booking.status = cancel_status(booking.status)
     except DomainRuleError as exc:
         raise _api_error(exc) from exc
     booking.cancellation_reason = body.reason or "Cancelled by host"
@@ -148,11 +148,7 @@ def cancel_booking(db: Session, owner_id: str, booking_uid: str, body: BookingAc
 
 
 def confirm_attendee(db: Session, booking_uid: str, token: str) -> Booking:
-    booking = db.scalar(select(Booking).where(Booking.uid == booking_uid))
-    if booking is None:
-        raise ApiException(404, "not_found", "Booking not found.")
-    if booking.attendee_token != token:
-        raise ApiException(410, "link_expired", "Invalid attendee token.")
+    booking = _get_booking_for_token(db, booking_uid, token)
     try:
         booking.status = attendee_confirm_status(booking.status)
     except DomainRuleError as exc:
@@ -160,6 +156,28 @@ def confirm_attendee(db: Session, booking_uid: str, token: str) -> Booking:
     booking.attendee_confirmed_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(booking)
+    return booking
+
+
+def cancel_attendee(db: Session, booking_uid: str, token: str, body: BookingActionRequest) -> Booking:
+    booking = _get_booking_for_token(db, booking_uid, token)
+    try:
+        booking.status = cancel_status(booking.status)
+    except DomainRuleError as exc:
+        raise _api_error(exc) from exc
+    reason = (body.reason or "").strip()
+    booking.cancellation_reason = reason or None
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
+def _get_booking_for_token(db: Session, booking_uid: str, token: str) -> Booking:
+    booking = db.scalar(select(Booking).where(Booking.uid == booking_uid))
+    if booking is None:
+        raise ApiException(404, "not_found", "Booking not found.")
+    if booking.attendee_token != token:
+        raise ApiException(410, "link_expired", "Invalid attendee token.")
     return booking
 
 

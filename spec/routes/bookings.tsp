@@ -59,4 +59,11 @@ interface PublicBookings {
   @route("{bookingUid}/confirm")
   confirmAttendee(@path bookingUid: string, @query token: PublicToken):
     Ok<Booking> | ValidationError | NotFoundError | GoneError | ConflictError;
+
+  @summary("Cancel booking as attendee")
+  @operationId("PublicBookings_cancelAttendee")
+  @post
+  @route("{bookingUid}/cancel")
+  cancelAttendee(@path bookingUid: string, @query token: PublicToken, @body body: BookingActionRequest):
+    Ok<Booking> | ValidationError | NotFoundError | GoneError | ConflictError;
 }

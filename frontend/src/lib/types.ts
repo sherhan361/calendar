@@ -169,6 +169,7 @@ export type Booking = {
   meetingUrl?: string | null;
   cancellationReason?: string | null;
   rejectionReason?: string | null;
+  manageToken?: string | null;
   createdAt: string;
   updatedAt: string;
 };

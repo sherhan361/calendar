@@ -218,9 +218,19 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
                 {bookingStatusLabel(createdBooking.status)}
               </p>
               {createdBooking.status !== "confirmed" ? <p className="muted">{t.public.pendingHint}</p> : null}
-              <a className={buttonClass("secondary")} href="#">
-                {t.public.backHome}
-              </a>
+              <div className="button-row">
+                <a className={buttonClass("secondary")} href="#">
+                  {t.public.backHome}
+                </a>
+                {createdBooking.manageToken ? (
+                  <a
+                    className={buttonClass("ghost")}
+                    href={`#/cancel/${createdBooking.uid}?token=${encodeURIComponent(createdBooking.manageToken)}`}
+                  >
+                    {t.public.cancelBookingLink}
+                  </a>
+                ) : null}
+              </div>
             </div>
           ) : eventType ? (
             <div className="picker-grid">

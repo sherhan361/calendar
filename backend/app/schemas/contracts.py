@@ -330,6 +330,7 @@ class Booking(BaseModel):
     meetingUrl: str | None = None
     cancellationReason: str | None = None
     rejectionReason: str | None = None
+    manageToken: str | None = None
     createdAt: datetime
     updatedAt: datetime
 

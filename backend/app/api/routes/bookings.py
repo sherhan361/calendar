@@ -13,7 +13,7 @@ from app.application import bookings as booking_use_cases
 from app.db.models import Booking, User
 from app.db.session import get_db
 from app.schemas.contracts import BookingActionRequest, BookingStatus, CreateBookingRequest
-from app.services.mappers import map_booking
+from app.services.mappers import map_booking, map_booking_with_manage_token
 from app.services.rate_limit import SlidingWindowRateLimiter, client_ip, get_booking_rate_limiter
 
 
@@ -29,7 +29,7 @@ def create_booking(
 ) -> dict[str, object]:
     if not rate_limiter.allow(client_ip(request)):
         raise ApiException(429, "rate_limited", "Too many booking attempts. Please try again later.")
-    return success(map_booking(booking_use_cases.create_booking(db, body)))
+    return success(map_booking_with_manage_token(booking_use_cases.create_booking(db, body)))
 
 
 @router.get("/bookings")
@@ -98,6 +98,16 @@ def confirm_attendee(
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     return success(map_booking(booking_use_cases.confirm_attendee(db, booking_uid, token)))
+
+
+@router.post("/public/bookings/{booking_uid}/cancel", tags=["Public Bookings"])
+def cancel_attendee(
+    booking_uid: str,
+    body: BookingActionRequest,
+    token: str,
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    return success(map_booking_with_manage_token(booking_use_cases.cancel_attendee(db, booking_uid, token, body)))
 
 
 def _date_floor(raw: str) -> datetime:
