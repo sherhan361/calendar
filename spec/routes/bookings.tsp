@@ -9,7 +9,8 @@ interface Bookings {
   @summary("Create booking from event type or share link")
   @operationId("Bookings_create")
   @post
-  create(@body body: CreateBookingRequest): Created<Booking> | ValidationError | NotFoundError | GoneError | ConflictError;
+  create(@body body: CreateBookingRequest):
+    Created<Booking> | ValidationError | NotFoundError | GoneError | ConflictError | TooManyRequestsError;
 
   @summary("List current user's bookings")
   @operationId("Bookings_list")

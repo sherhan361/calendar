@@ -100,3 +100,9 @@ model GoneError {
   @statusCode statusCode: 410;
   @body body: ApiError<"link_expired">;
 }
+
+@error
+model TooManyRequestsError {
+  @statusCode statusCode: 429;
+  @body body: ApiError<"rate_limited">;
+}

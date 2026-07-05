@@ -16,6 +16,8 @@ class Settings:
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7
     cors_origins: list[str] = field(default_factory=lambda: ["http://127.0.0.1:5173", "http://localhost:5173"])
+    booking_rate_limit_max: int = 5
+    booking_rate_limit_window_seconds: float = 60.0
 
 
 def _default_database_url() -> str:
@@ -38,4 +40,6 @@ settings = Settings(
     jwt_secret=os.getenv("CALENDAR_JWT_SECRET", "dev-calendar-secret-change-me-at-least-32-bytes"),
     access_token_expire_minutes=int(os.getenv("CALENDAR_ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7))),
     cors_origins=_cors_origins(),
+    booking_rate_limit_max=int(os.getenv("CALENDAR_BOOKING_RATE_LIMIT_MAX", "5")),
+    booking_rate_limit_window_seconds=float(os.getenv("CALENDAR_BOOKING_RATE_LIMIT_WINDOW_SECONDS", "60")),
 )

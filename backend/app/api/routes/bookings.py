@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.deps import current_user
 from app.api.responses import ApiException, success
@@ -14,13 +14,21 @@ from app.db.models import Booking, User
 from app.db.session import get_db
 from app.schemas.contracts import BookingActionRequest, BookingStatus, CreateBookingRequest
 from app.services.mappers import map_booking
+from app.services.rate_limit import SlidingWindowRateLimiter, client_ip, get_booking_rate_limiter
 
 
 router = APIRouter(tags=["Bookings"])
 
 
 @router.post("/bookings", status_code=201)
-def create_booking(body: CreateBookingRequest, db: Session = Depends(get_db)) -> dict[str, object]:
+def create_booking(
+    body: CreateBookingRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    rate_limiter: SlidingWindowRateLimiter = Depends(get_booking_rate_limiter),
+) -> dict[str, object]:
+    if not rate_limiter.allow(client_ip(request)):
+        raise ApiException(429, "rate_limited", "Too many booking attempts. Please try again later.")
     return success(map_booking(booking_use_cases.create_booking(db, body)))
 
 

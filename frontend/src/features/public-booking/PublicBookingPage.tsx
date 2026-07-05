@@ -136,7 +136,9 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
       idempotencyKeyRef.current = null;
       setCreatedBooking(created);
     } catch (requestError) {
-      if (requestError instanceof ApiRequestError && requestError.code === "conflict") {
+      if (requestError instanceof ApiRequestError && requestError.code === "rate_limited") {
+        setError(t.public.rateLimited);
+      } else if (requestError instanceof ApiRequestError && requestError.code === "conflict") {
         idempotencyKeyRef.current = null;
         setError(t.public.slotTaken);
         try {
