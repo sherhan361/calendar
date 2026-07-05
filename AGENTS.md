@@ -1,48 +1,59 @@
-# Repository Guidelines
+# Правила репозитория
 
-## Project Structure & Module Organization
+## Структура проекта и организация модулей
 
-Calendar app with a Vite + React + TypeScript frontend, FastAPI backend, SQLite database, and TypeSpec API contract.
+Календарное приложение с фронтендом на Vite + React + TypeScript, бэкендом на FastAPI, базой SQLite и API-контрактом на TypeSpec.
 
-- `frontend/src/app/`: app shell, routing, and workspace state.
-- `frontend/src/features/`: domain UI flows for event types, availability, bookings, auth, and public booking.
-- `frontend/src/components/ui/`: reusable UI primitives.
-- `frontend/src/lib/`: shared API, types, date/time, i18n, and utilities.
-- `backend/app/`: FastAPI application, routes, services, schemas, config, and database setup.
-- `backend/alembic/`: database migrations.
-- `backend/scripts/`: local backend/dev helpers and seed data.
-- `spec/`: TypeSpec API models and routes.
+- `frontend/src/app/`: оболочка приложения, роутинг и состояние рабочего пространства.
+- `frontend/src/features/`: доменные UI-сценарии для типов событий, доступности, бронирований, авторизации и публичного бронирования.
+- `frontend/src/components/ui/`: переиспользуемые UI-примитивы.
+- `frontend/src/lib/`: общий API-клиент, типы, дата/время, i18n и утилиты.
+- `backend/app/api/`: FastAPI-роуты, зависимости и единый формат ответов.
+- `backend/app/application/`: прикладные сценарии и транзакционная оркестрация.
+- `backend/app/domain/`: доменные правила календаря без импортов API, ORM и фронтенд-контрактов.
+- `backend/app/services/`: мапперы и инфраструктурные хелперы.
+- `backend/app/db/`: SQLAlchemy-модели, сессии и настройка базы.
+- `backend/app/schemas/`: Pydantic DTO, выровненные со `spec/`.
+- `backend/alembic/`: миграции базы данных.
+- `backend/scripts/`: локальные хелперы для разработки бэкенда и seed-данные.
+- `spec/`: TypeSpec-модели и роуты API.
 
-## Build, Test, and Development Commands
+## Команды сборки, тестов и разработки
 
-- `make install`: install frontend npm dependencies and backend Python dependencies.
-- `make dev`: run FastAPI backend and Vite frontend together.
-- `make dev-web`: run only the frontend on `127.0.0.1:5173`.
-- `make dev-api`: run only the FastAPI backend on `127.0.0.1:8000`.
-- `make db-reset`: recreate and seed the local SQLite database.
-- `make db-migrate`: apply Alembic migrations.
-- `make db-seed`: seed the local SQLite database.
-- `make typespec-compile`: compile `spec/` to OpenAPI output in `/tmp/calendar-typespec-output`.
-- `make docs PORT=8080`: serve local API docs.
-- `make build`: run TypeScript and Vite production builds.
-- `make test`: run TypeSpec compile, backend tests, and frontend build.
+- `make install`: установить npm-зависимости фронтенда и Python-зависимости бэкенда.
+- `make dev`: запустить FastAPI-бэкенд и Vite-фронтенд вместе.
+- `make dev-web`: запустить только фронтенд на `127.0.0.1:5173`.
+- `make dev-api`: запустить только FastAPI-бэкенд на `127.0.0.1:8000`.
+- `make db-reset`: пересоздать и наполнить локальную SQLite-базу.
+- `make db-migrate`: применить миграции Alembic.
+- `make db-revision MSG="..."`: создать новую autogenerate-миграцию Alembic.
+- `make db-seed`: наполнить локальную SQLite-базу seed-данными.
+- `make typespec-compile`: скомпилировать `spec/` в OpenAPI-вывод в `/tmp/calendar-typespec-output`.
+- `make compile`: алиас для `make typespec-compile`.
+- `make docs PORT=8080`: поднять локальную API-документацию.
+- `make build`: запустить production-сборку фронтенда (`tsc -b` и `vite build`).
+- `make test`: скомпилировать TypeSpec, запустить тесты бэкенда и собрать фронтенд.
 
-## Coding Style & Naming Conventions
+## Стиль кода и соглашения об именовании
 
-Use strict TypeScript and React function components in the frontend. Keep component files in `PascalCase.tsx`, hooks in `useCamelCase.ts`, and shared helpers in `camelCase.ts`. Follow the existing style: 2-space indentation, double quotes, semicolons, named exports, and `type` aliases for props and API shapes.
+На фронтенде используем strict TypeScript и функциональные React-компоненты. Файлы компонентов называем в стиле `PascalCase.tsx`, хуки - `useCamelCase.ts`, общие хелперы - `camelCase.ts`. Следуем существующему стилю: отступ 2 пробела, двойные кавычки, точки с запятой, named exports и `type`-алиасы для props и API-структур.
 
-Keep frontend API calls centralized in `frontend/src/lib/api.ts`, shared DTOs in `frontend/src/lib/types.ts`, and user-facing text in `frontend/src/lib/i18n.ts`. Keep backend request/response DTOs aligned with `spec/` in `backend/app/schemas/`.
+Фронтендовые API-вызовы держим централизованно в `frontend/src/lib/api.ts`, общие DTO - в `frontend/src/lib/types.ts`, пользовательские тексты - в `frontend/src/lib/i18n.ts`. DTO бэкенда для запросов и ответов синхронизируем со `spec/` в `backend/app/schemas/`.
 
-## Testing Guidelines
+FastAPI-роуты должны оставаться тонкими адаптерами. Бизнес-операции добавляем в `backend/app/application/`, чистые правила календаря - в `backend/app/domain/`, а преобразование ORM-моделей в контрактные ответы - в `backend/app/services/mappers.py`.
 
-Treat `make test` as required verification before opening a PR. For UI changes, also run `make dev` and manually verify the affected flow. Keep backend tests under `backend/tests/` and test names tied to the route, feature, or helper under test.
+Markdown-документацию ведем на русском. Команды, пути, переменные окружения, имена технологий и контрактные идентификаторы оставляем в исходном написании.
 
-## Commit & Pull Request Guidelines
+## Правила тестирования
 
-History is short and uses concise subjects such as `Initial commit` and `создана спека и фронт`. Use a short imperative subject in Russian or English, and keep one logical change per commit.
+Перед открытием PR считаем `make test` обязательной проверкой. Для UI-изменений также запускаем `make dev` и вручную проверяем затронутый сценарий. Тесты бэкенда держим в `backend/tests/`, а имена тестов привязываем к проверяемому роуту, фиче или хелперу.
 
-Pull requests should include a brief summary, verification commands, linked issue or task when available, and screenshots for visible UI changes. Call out API contract, TypeSpec, Alembic migration, or seed data changes explicitly.
+## Правила коммитов и pull request
 
-## Security & Configuration Tips
+История короткая и использует лаконичные темы вроде `Initial commit` и `создана спека и фронт`. Используем короткую императивную тему на русском или английском и держим один логический набор изменений в одном коммите.
 
-The frontend reads `VITE_API_URL` and falls back to `http://127.0.0.1:8000`. The backend reads `CALENDAR_DATABASE_URL`, `CALENDAR_JWT_SECRET`, and `CALENDAR_CORS_ORIGINS`. Do not commit local secrets or generated SQLite files. Use seeded data instead of hardcoding temporary credentials.
+В pull request добавляем краткое описание, команды проверки, ссылку на issue или задачу при наличии и скриншоты для видимых UI-изменений. Изменения API-контракта, TypeSpec, миграций Alembic или seed-данных отмечаем явно.
+
+## Безопасность и конфигурация
+
+Фронтенд читает `VITE_API_URL` и по умолчанию использует `http://127.0.0.1:8000`. Бэкенд читает `CALENDAR_DATABASE_URL`, `CALENDAR_JWT_SECRET` и `CALENDAR_CORS_ORIGINS`. Не коммитим локальные секреты и сгенерированные SQLite-файлы. Для временных учетных данных используем seed-данные вместо хардкода.

@@ -1,15 +1,15 @@
-# Keep TypeSpec Contracts As The API Boundary
+# Оставляем TypeSpec-контракты границей API
 
-The frontend and backend share a TypeSpec contract that predates the FastAPI backend. We decided to preserve TypeSpec as the external API boundary and map FastAPI request and response models into application use cases, rather than deriving the domain model from transport shapes.
+Фронтенд и бэкенд используют общий TypeSpec-контракт, который появился раньше FastAPI-бэкенда. Мы решили сохранить TypeSpec как внешнюю границу API и маппить FastAPI-модели запросов и ответов в прикладные сценарии, а не выводить доменную модель из транспортных структур.
 
-**Considered Options**
+**Рассмотренные варианты**
 
-- Generate backend models directly from TypeSpec/OpenAPI.
-- Treat Pydantic request and response models as domain entities.
-- Keep contract DTOs at the API edge and map into application/domain code.
+- Генерировать модели бэкенда напрямую из TypeSpec/OpenAPI.
+- Считать Pydantic-модели запросов и ответов доменными сущностями.
+- Держать контрактные DTO на границе API и маппить их в прикладной и доменный код.
 
-**Consequences**
+**Последствия**
 
-- Contract compatibility remains explicit.
-- The backend carries some mapping code.
-- Domain language can use terms like Host and Slot even when the API still exposes compatibility names such as owner or user.
+- Совместимость контрактов остается явной.
+- На бэкенде появляется часть кода маппинга.
+- Доменный язык может использовать термины вроде Организатор и Слот, даже если API все еще публикует совместимые имена вроде owner или user.

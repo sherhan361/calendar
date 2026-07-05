@@ -1,14 +1,14 @@
 # calendar
 
-Vite + React frontend, FastAPI backend, and TypeSpec API contract.
+Фронтенд на Vite + React, бэкенд на FastAPI и API-контракт на TypeSpec.
 
-## Structure
+## Структура
 
-- `frontend/` - React/Vite application.
-- `backend/` - FastAPI application with SQLAlchemy, Alembic, and SQLite.
-- `spec/` - TypeSpec contract used to compile OpenAPI.
+- `frontend/` - приложение React/Vite.
+- `backend/` - приложение FastAPI с SQLAlchemy, Alembic и SQLite.
+- `spec/` - TypeSpec-контракт, из которого компилируется OpenAPI.
 
-## Commands
+## Команды
 
 ```sh
 make install
@@ -16,17 +16,17 @@ make db-reset
 make dev
 ```
 
-Useful targets:
+Полезные цели:
 
-- `make dev-web` - run only the frontend on `127.0.0.1:5173`.
-- `make dev-api` - run only the FastAPI backend on `127.0.0.1:8000`.
-- `make db-migrate` - apply Alembic migrations.
-- `make db-seed` - seed the local SQLite database.
-- `make typespec-compile` - compile `spec/` into OpenAPI output.
-- `make docs PORT=8080` - serve local API docs.
-- `make test` - compile TypeSpec, run backend tests, and build the frontend.
+- `make dev-web` - запустить только фронтенд на `127.0.0.1:5173`.
+- `make dev-api` - запустить только FastAPI-бэкенд на `127.0.0.1:8000`.
+- `make db-migrate` - применить миграции Alembic.
+- `make db-seed` - наполнить локальную SQLite-базу начальными данными.
+- `make typespec-compile` - скомпилировать `spec/` в OpenAPI.
+- `make docs PORT=8080` - поднять локальную API-документацию.
+- `make test` - скомпилировать TypeSpec, запустить тесты бэкенда и собрать фронтенд.
 
-Seeded demo login:
+Демо-логин из seed-данных:
 
 - Email: `demo@example.com`
 - Password: `demo`

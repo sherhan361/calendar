@@ -1,73 +1,73 @@
-# Calendar Booking
+# Календарное бронирование
 
-This context describes how hosts expose bookable time and how attendees create bookings. The language below is product language, not API or storage naming.
+Этот контекст описывает, как организаторы открывают время для бронирования и как участники создают бронирования. Термины ниже относятся к продуктовой области, а не к именам в API или хранилище.
 
-## Language
+## Язык
 
-**Host**:
-A person who offers bookable time through schedules and event types.
-_Avoid_: Owner, calendar owner, user when describing the business role
+**Организатор**:
+Человек, который предлагает доступное для бронирования время через расписания и типы событий.
+_Не использовать_: Owner, владелец календаря, пользователь при описании бизнес-роли
 
-**Attendee**:
-A person who requests or holds booked time with a Host.
-_Avoid_: Guest, invitee, participant
+**Участник**:
+Человек, который запрашивает или занимает забронированное время у Организатора.
+_Не использовать_: Гость, приглашенный, participant
 
-**Schedule**:
-A Host's recurring availability and dated availability changes in one time zone.
-_Avoid_: Calendar, working hours
+**Расписание**:
+Повторяющаяся доступность Организатора и датированные изменения доступности в одном часовом поясе.
+_Не использовать_: Календарь, рабочие часы
 
-**Availability Rule**:
-A recurring local-time interval on one or more weekdays when a Schedule can produce Slots.
-_Avoid_: Opening hours, weekly rule
+**Правило доступности**:
+Повторяющийся интервал локального времени в один или несколько дней недели, из которого Расписание может создавать Слоты.
+_Не использовать_: Часы работы, недельное правило
 
-**Availability Override**:
-A date-specific change to Schedule availability that either removes or adds available local time.
-_Avoid_: Exception, blackout
+**Переопределение доступности**:
+Изменение доступности Расписания на конкретную дату, которое убирает или добавляет доступное локальное время.
+_Не использовать_: Исключение, блокировка
 
-**Event Type**:
-A bookable offering owned by a Host, with a duration, Schedule, visibility, and booking rules.
-_Avoid_: Meeting type, service
+**Тип события**:
+Предложение для бронирования, принадлежащее Организатору, с длительностью, Расписанием, видимостью и правилами бронирования.
+_Не использовать_: Тип встречи, услуга
 
-**Slot**:
-A candidate time interval generated for an Event Type from its Schedule and booking rules. A Slot can be available or blocked.
-_Avoid_: Time option, time cell
+**Слот**:
+Кандидатный временной интервал, созданный для Типа события из его Расписания и правил бронирования. Слот может быть доступным или заблокированным.
+_Не использовать_: Вариант времени, ячейка времени
 
-**Booking**:
-A request or reservation for one Event Type at a specific time interval with one Attendee.
-_Avoid_: Appointment, meeting
+**Бронирование**:
+Запрос или резервирование одного Типа события на конкретный временной интервал с одним Участником.
+_Не использовать_: Запись, встреча
 
-**Pending Booking**:
-A Booking awaiting confirmation from either the Host or the Attendee, depending on the Confirmation Policy.
-_Avoid_: Draft booking, tentative booking
+**Ожидающее бронирование**:
+Бронирование, которое ожидает подтверждения от Организатора или Участника в зависимости от Политики подтверждения.
+_Не использовать_: Черновик бронирования, предварительное бронирование
 
-**Confirmed Booking**:
-A Booking that no longer requires confirmation and reserves the time.
-_Avoid_: Accepted booking
+**Подтвержденное бронирование**:
+Бронирование, которое больше не требует подтверждения и резервирует время.
+_Не использовать_: Принятое бронирование
 
-**Declined Booking**:
-A Pending Booking rejected by the Host.
-_Avoid_: Rejected booking
+**Отклоненное бронирование**:
+Ожидающее бронирование, отклоненное Организатором.
+_Не использовать_: Отклоненный запрос
 
-**Cancelled Booking**:
-A Booking that is stopped after creation rather than rejected during Host review.
-_Avoid_: Deleted booking
+**Отмененное бронирование**:
+Бронирование, которое остановили после создания, а не отклонили во время проверки Организатором.
+_Не использовать_: Удаленное бронирование
 
-**Confirmation Policy**:
-The rule that decides whether a new Booking is immediately confirmed or waits for Host or Attendee confirmation.
-_Avoid_: Approval mode
+**Политика подтверждения**:
+Правило, которое определяет, подтверждается ли новое Бронирование сразу или ожидает подтверждения Организатором либо Участником.
+_Не использовать_: Режим согласования
 
-**Booking Window**:
-The range of calendar dates in which new Bookings can be created for an Event Type.
-_Avoid_: Date filter, date range
+**Окно бронирования**:
+Диапазон календарных дат, в котором можно создавать новые Бронирования для Типа события.
+_Не использовать_: Фильтр дат, диапазон дат
 
-**Buffer**:
-Time protected before or after a Booking so adjacent Slots are not offered too close to it.
-_Avoid_: Padding, gap
+**Буфер**:
+Время, защищенное до или после Бронирования, чтобы соседние Слоты не предлагались слишком близко к нему.
+_Не использовать_: Отступ, зазор
 
-**Share Link**:
-A tokenized private link that grants booking access to an Event Type and can have expiry or usage limits.
-_Avoid_: Invite link, public link
+**Ссылка для бронирования**:
+Приватная токенизированная ссылка, которая дает доступ к бронированию Типа события, включая скрытый Тип события. Может иметь срок действия или лимит использования.
+_Не использовать_: Ссылка-приглашение, публичная ссылка
 
-**Share Link Usage**:
-One successful Booking created through a Share Link. Viewing or opening the link is not usage.
-_Avoid_: View count, click count
+**Использование ссылки для бронирования**:
+Одно успешное Бронирование, созданное через Ссылку для бронирования. Просмотр или открытие ссылки не считается использованием.
+_Не использовать_: Количество просмотров, количество кликов

@@ -1,15 +1,15 @@
-# Separate Domain Rules From API Adapters
+# Отделяем доменные правила от API-адаптеров
 
-The backend exposes HTTP contracts, but slot generation, booking creation, and booking status transitions are calendar-domain rules rather than route-handler details. We decided to keep FastAPI routes as adapters, put transaction orchestration in application use cases, and keep availability and status rules in a domain module so slot listing and booking creation evaluate the same rules.
+Бэкенд публикует HTTP-контракты, но генерация слотов, создание бронирований и переходы статусов бронирования являются правилами календарного домена, а не деталями обработчиков роутов. Мы решили оставить FastAPI-роуты адаптерами, оркестрацию транзакций держать в прикладных сценариях, а правила доступности и статусов - в доменном модуле, чтобы список слотов и создание бронирования проверяли одни и те же правила.
 
-**Considered Options**
+**Рассмотренные варианты**
 
-- Keep the rules directly in FastAPI routes.
-- Move the rules into ORM models.
-- Use a separate domain module plus application use cases.
+- Держать правила прямо в FastAPI-роутах.
+- Перенести правила в ORM-модели.
+- Использовать отдельный доменный модуль и прикладные сценарии.
 
-**Consequences**
+**Последствия**
 
-- Calendar rules can be tested without HTTP or database setup.
-- Routes stay thin, but application use cases still own persistence orchestration.
-- The domain layer must not import API, ORM, or frontend contract types.
+- Календарные правила можно тестировать без HTTP и настройки базы данных.
+- Роуты остаются тонкими, но прикладные сценарии по-прежнему отвечают за оркестрацию сохранения.
+- Доменный слой не должен импортировать API, ORM или типы фронтенд-контрактов.
