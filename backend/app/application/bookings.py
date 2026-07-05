@@ -4,12 +4,14 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.responses import ApiException
 from app.application.slots import event_type_slot_is_available
 from app.db.models import Booking, EventType, ShareLink, User
 from app.domain.calendar import (
+    ACTIVE_BOOKING_STATUSES,
     DomainRuleError,
     attendee_confirm_status,
     ensure_utc,
@@ -26,6 +28,11 @@ def create_booking(db: Session, body: CreateBookingRequest) -> Booking:
     event_type = _resolve_event_type_for_booking(db, body)
     if event_type is None:
         raise ApiException(404, "not_found", "Event type not found.")
+
+    if body.idempotencyKey is not None:
+        existing = _find_by_idempotency_key(db, event_type.id, body.idempotencyKey)
+        if existing is not None:
+            return existing
 
     link = _resolve_share_link(db, event_type, body.shareToken)
     start = ensure_utc(body.start)
@@ -54,14 +61,55 @@ def create_booking(db: Session, body: CreateBookingRequest) -> Booking:
         attendee_email=str(body.attendee.email),
         attendee_time_zone=body.attendee.timeZone,
         attendee_token=random_token(),
+        idempotency_key=body.idempotencyKey,
         share_token=body.shareToken,
     )
     if link is not None:
         link.usage_count += 1
     db.add(booking)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        return _resolve_booking_conflict(db, body, event_type.id, start, exc)
     db.refresh(booking)
     return booking
+
+
+def _resolve_booking_conflict(
+    db: Session,
+    body: CreateBookingRequest,
+    event_type_id: str,
+    start: datetime,
+    exc: IntegrityError,
+) -> Booking:
+    if body.idempotencyKey is not None:
+        existing = _find_by_idempotency_key(db, event_type_id, body.idempotencyKey)
+        if existing is not None:
+            return existing
+    if _active_slot_taken(db, event_type_id, start):
+        raise ApiException(409, "conflict", "Slot is not available.") from exc
+    raise ApiException(409, "conflict", "Booking could not be created.") from exc
+
+
+def _find_by_idempotency_key(db: Session, event_type_id: str, idempotency_key: str) -> Booking | None:
+    return db.scalar(
+        select(Booking).where(
+            Booking.event_type_id == event_type_id,
+            Booking.idempotency_key == idempotency_key,
+        )
+    )
+
+
+def _active_slot_taken(db: Session, event_type_id: str, start: datetime) -> bool:
+    active = db.scalar(
+        select(Booking).where(
+            Booking.event_type_id == event_type_id,
+            Booking.start == start,
+            Booking.status.in_(ACTIVE_BOOKING_STATUSES),
+        )
+    )
+    return active is not None
 
 
 def confirm_booking(db: Session, owner_id: str, booking_uid: str) -> Booking:

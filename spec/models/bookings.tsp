@@ -48,6 +48,7 @@ model CreateBookingRequest {
   shareToken?: PublicToken;
   start: utcDateTime;
   durationMinutes?: int32;
+  idempotencyKey?: IdempotencyKey;
   attendee: BookingAttendeeInput;
 }
 

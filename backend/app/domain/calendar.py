@@ -10,6 +10,7 @@ CONFIRMATION_POLICY_TYPES = {"automatic", "host", "attendee"}
 BOOKING_STATUSES = {"pending_host", "pending_attendee", "confirmed", "declined", "cancelled"}
 PENDING_BOOKING_STATUSES = {"pending_host", "pending_attendee"}
 NON_BLOCKING_BOOKING_STATUSES = {"cancelled", "declined"}
+ACTIVE_BOOKING_STATUSES = BOOKING_STATUSES - NON_BLOCKING_BOOKING_STATUSES
 
 
 class DomainRuleError(Exception):

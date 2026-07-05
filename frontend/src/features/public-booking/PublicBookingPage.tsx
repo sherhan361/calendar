@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Form } from "@base-ui-components/react/form";
 import { Calendar } from "./Calendar";
@@ -6,8 +6,8 @@ import { Button, buttonClass } from "../../components/ui/Button";
 import { TextField } from "../../components/ui/TextField";
 import { SelectField } from "../../components/ui/SelectField";
 import { IconClock } from "../../components/ui/icons";
-import { api } from "../../lib/api";
-import { asErrorMessage, initials, cx } from "../../lib/utils";
+import { api, ApiRequestError } from "../../lib/api";
+import { asErrorMessage, initials, cx, newIdempotencyKey } from "../../lib/utils";
 import {
   addDays,
   browserTimeZone,
@@ -26,6 +26,21 @@ const tzOptions = timeZoneOptions().map((zone) => ({ value: zone, label: zone.re
 
 type PublicRoute = Extract<AppRoute, { kind: "public-booking" }>;
 
+async function fetchAvailableSlots(route: PublicRoute, durationMinutes: number, timeZone: string): Promise<Slot[]> {
+  const start = localDateString(new Date());
+  const end = localDateString(addDays(new Date(), 30));
+  const response = await api.getPublicSlots({
+    username: route.username,
+    eventTypeSlug: route.slug,
+    start,
+    end,
+    timeZone,
+    durationMinutes,
+    shareToken: route.shareToken,
+  });
+  return response.days.flatMap((day) => day.slots).filter((slot) => slot.available);
+}
+
 export function PublicBookingPage({ route }: { route: PublicRoute }) {
   const [eventType, setEventType] = useState<PublicEventType | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -42,6 +57,7 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,20 +66,10 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
       setError("");
       try {
         const nextEvent = await api.getPublicEventType(route.username, route.slug, route.shareToken);
-        const start = localDateString(new Date());
-        const end = localDateString(addDays(new Date(), 30));
-        const nextSlots = await api.getPublicSlots({
-          username: route.username,
-          eventTypeSlug: route.slug,
-          start,
-          end,
-          timeZone,
-          durationMinutes: nextEvent.durationMinutes,
-          shareToken: route.shareToken,
-        });
+        const nextSlots = await fetchAvailableSlots(route, nextEvent.durationMinutes, timeZone);
         if (cancelled) return;
         setEventType(nextEvent);
-        setSlots(nextSlots.days.flatMap((day) => day.slots).filter((slot) => slot.available));
+        setSlots(nextSlots);
       } catch (requestError) {
         if (!cancelled) setError(asErrorMessage(requestError));
       } finally {
@@ -104,9 +110,17 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
 
   const daySlots = selectedDay ? slotsByDay.get(selectedDay) ?? [] : [];
 
+  function chooseSlot(slot: Slot | null) {
+    idempotencyKeyRef.current = null;
+    setSelectedSlot(slot);
+  }
+
   async function submitBooking(event: FormEvent) {
     event.preventDefault();
-    if (!eventType || !selectedSlot) return;
+    if (!eventType || !selectedSlot || booking) return;
+    if (idempotencyKeyRef.current === null) {
+      idempotencyKeyRef.current = newIdempotencyKey();
+    }
     setBooking(true);
     setError("");
     try {
@@ -116,11 +130,24 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
         shareToken: route.shareToken,
         start: selectedSlot.start,
         durationMinutes: eventType.durationMinutes,
+        idempotencyKey: idempotencyKeyRef.current,
         attendee: { name, email, timeZone },
       });
+      idempotencyKeyRef.current = null;
       setCreatedBooking(created);
     } catch (requestError) {
-      setError(asErrorMessage(requestError));
+      if (requestError instanceof ApiRequestError && requestError.code === "conflict") {
+        idempotencyKeyRef.current = null;
+        setError(t.public.slotTaken);
+        try {
+          setSlots(await fetchAvailableSlots(route, eventType.durationMinutes, timeZone));
+        } catch {
+          // keep the current slot list if refresh fails
+        }
+        setSelectedSlot(null);
+      } else {
+        setError(asErrorMessage(requestError));
+      }
     } finally {
       setBooking(false);
     }
@@ -181,7 +208,7 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
                   onMonthChange={(year, m) => setMonth({ year, month: m })}
                   onSelect={(key) => {
                     setSelectedDay(key);
-                    setSelectedSlot(null);
+                    chooseSlot(null);
                   }}
                 />
               </div>
@@ -196,7 +223,7 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
                     <TextField label={t.public.name} value={name} onChange={setName} required />
                     <TextField label={t.public.email} type="email" value={email} onChange={setEmail} required />
                     <div className="button-row">
-                      <Button variant="ghost" onClick={() => setSelectedSlot(null)}>
+                      <Button variant="ghost" onClick={() => chooseSlot(null)}>
                         {t.common.back}
                       </Button>
                       <Button variant="primary" type="submit" disabled={booking}>
@@ -214,7 +241,7 @@ export function PublicBookingPage({ route }: { route: PublicRoute }) {
                           key={slot.start}
                           type="button"
                           className={cx("slot-button", selectedSlot === slot && "selected")}
-                          onClick={() => setSelectedSlot(slot)}
+                          onClick={() => chooseSlot(slot)}
                         >
                           {formatTime(slot.start, timeZone)}
                         </button>

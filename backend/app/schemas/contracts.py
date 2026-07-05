@@ -12,6 +12,7 @@ LocalDate = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
 LocalTime = Annotated[str, Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")]
 Slug = Annotated[str, Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")]
 PublicToken = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{16,128}$")]
+IdempotencyKey = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{8,128}$")]
 Username = Annotated[str, Field(pattern=r"^[A-Za-z][A-Za-z0-9_-]{2,31}$")]
 TimeZone = str
 
@@ -327,6 +328,7 @@ class CreateBookingRequest(BaseModel):
     shareToken: PublicToken | None = None
     start: datetime
     durationMinutes: int | None = None
+    idempotencyKey: IdempotencyKey | None = None
     attendee: BookingAttendeeInput
 
 

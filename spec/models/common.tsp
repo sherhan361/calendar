@@ -20,6 +20,9 @@ scalar Slug extends string;
 @pattern("^[A-Za-z0-9_-]{16,128}$")
 scalar PublicToken extends string;
 
+@pattern("^[A-Za-z0-9_-]{8,128}$")
+scalar IdempotencyKey extends string;
+
 @pattern("^[A-Za-z][A-Za-z0-9_-]{2,31}$")
 scalar Username extends string;
 

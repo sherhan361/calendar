@@ -59,6 +59,7 @@ export type CreateBookingInput = {
   shareToken?: string;
   start: string;
   durationMinutes: number;
+  idempotencyKey?: string;
   attendee: {
     name: string;
     email: string;
@@ -198,6 +199,18 @@ type RequestOptions = {
   body?: unknown;
 };
 
+export class ApiRequestError extends Error {
+  readonly code: string;
+  readonly status: number;
+
+  constructor(message: string, code: string, status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method ?? "GET",
@@ -212,7 +225,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const payload = (await response.json()) as ApiSuccess<T> | ApiError;
   if (!response.ok || payload.status === "error") {
-    throw new Error(payload.status === "error" ? payload.error.message : "Request failed");
+    const message = payload.status === "error" ? payload.error.message : "Request failed";
+    const code = payload.status === "error" ? payload.error.code : "request_failed";
+    throw new ApiRequestError(message, code, response.status);
   }
 
   return payload.data;

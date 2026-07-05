@@ -28,6 +28,13 @@ export function asErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unexpected error";
 }
 
+export function newIdempotencyKey() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 const STATUS_LABELS: Record<string, string> = {
   pending_host: "Pending approval",
   pending_attendee: "Awaiting attendee",

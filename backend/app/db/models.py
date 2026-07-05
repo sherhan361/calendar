@@ -3,8 +3,14 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from app.domain.calendar import ACTIVE_BOOKING_STATUSES
+
+ACTIVE_BOOKING_SLOT_PREDICATE = "status IN ({})".format(
+    ", ".join(f"'{status}'" for status in sorted(ACTIVE_BOOKING_STATUSES))
+)
 
 
 def new_uuid() -> str:
@@ -150,6 +156,7 @@ class Booking(TimestampMixin, Base):
     attendee_time_zone: Mapped[str] = mapped_column(String(128), nullable=False)
     attendee_token: Mapped[str] = mapped_column(String(128), nullable=False)
     attendee_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    idempotency_key: Mapped[str | None] = mapped_column(String(128))
     share_token: Mapped[str | None] = mapped_column(String(128))
     meeting_url: Mapped[str | None] = mapped_column(String(2048))
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
@@ -166,4 +173,13 @@ class Booking(TimestampMixin, Base):
         CheckConstraint("duration_minutes > 0", name="ck_bookings_duration_positive"),
         Index("ix_bookings_owner_status", "owner_id", "status"),
         Index("ix_bookings_event_type_start", "event_type_id", "start"),
+        Index("uq_bookings_event_type_idempotency_key", "event_type_id", "idempotency_key", unique=True),
+        Index(
+            "uq_bookings_active_slot",
+            "event_type_id",
+            "start",
+            unique=True,
+            sqlite_where=text(ACTIVE_BOOKING_SLOT_PREDICATE),
+            postgresql_where=text(ACTIVE_BOOKING_SLOT_PREDICATE),
+        ),
     )
