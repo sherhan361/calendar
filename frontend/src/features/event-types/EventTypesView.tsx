@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { Switch } from "@base-ui-components/react/switch";
 import { Button } from "../../components/ui/Button";
+import { Modal, DialogClose } from "../../components/ui/Modal";
 import { IconClock, IconExternal, IconEyeOff, IconLink } from "../../components/ui/icons";
 import { CreateEventTypeDialog } from "./CreateEventTypeDialog";
+import { EditEventTypeDialog } from "./EditEventTypeDialog";
 import { api } from "../../lib/api";
 import { asErrorMessage, copyText, cx } from "../../lib/utils";
 import { useToast } from "../../components/ui/toast";
@@ -77,8 +79,24 @@ function EventTypeRow({
 }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const publicPath = `#/book/${user.username}/${eventType.slug}`;
   const publicUrl = `${window.location.origin}/${publicPath}`;
+
+  async function removeEventType() {
+    setBusy(true);
+    try {
+      await api.deleteEventType(token, eventType.id);
+      toast.success(t.eventTypes.deleted, eventType.title);
+      setDeleteOpen(false);
+      onChanged();
+    } catch (error) {
+      toast.error(t.eventTypes.deleteError, asErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function toggleHidden(checked: boolean) {
     setBusy(true);
@@ -149,7 +167,38 @@ function EventTypeRow({
         <button type="button" className="icon-btn" title={t.common.privateLink} disabled={busy} onClick={() => void createLink()}>
           <span className="icon-btn-label">⋯</span>
         </button>
+        <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
+          {t.eventTypes.edit}
+        </Button>
+        <Button variant="ghost" size="sm" disabled={busy} onClick={() => setDeleteOpen(true)}>
+          {t.eventTypes.deleteAction}
+        </Button>
       </div>
+
+      <EditEventTypeDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        token={token}
+        eventType={eventType}
+        onUpdated={onChanged}
+      />
+
+      <Modal
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={t.eventTypes.deleteTitle}
+        description={eventType.title}
+        footer={
+          <>
+            <DialogClose className="btn btn-ghost">{t.common.cancel}</DialogClose>
+            <Button variant="danger" disabled={busy} onClick={() => void removeEventType()}>
+              {busy ? t.common.syncing : t.eventTypes.deleteAction}
+            </Button>
+          </>
+        }
+      >
+        <p className="muted">{t.eventTypes.deleteConfirm}</p>
+      </Modal>
     </article>
   );
 }

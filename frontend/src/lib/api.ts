@@ -112,11 +112,21 @@ export const api = {
       body: payload,
     }),
 
-  updateEventType: (token: string, eventTypeId: string, payload: Partial<EventTypeInput & { hidden?: boolean }>) =>
+  updateEventType: (
+    token: string,
+    eventTypeId: string,
+    payload: Partial<Omit<EventTypeInput, "bookingWindow"> & { hidden?: boolean; bookingWindow?: EventTypeInput["bookingWindow"] | null }>,
+  ) =>
     request<EventType>(`/event-types/${eventTypeId}`, {
       method: "PATCH",
       token,
       body: payload,
+    }),
+
+  deleteEventType: (token: string, eventTypeId: string) =>
+    request<void>(`/event-types/${eventTypeId}`, {
+      method: "DELETE",
+      token,
     }),
 
   createShareLink: (token: string, eventTypeId: string, recipientEmail?: string) =>

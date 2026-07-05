@@ -4,7 +4,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 from app.api.responses import ApiException
-from app.db.models import EventType, Schedule, ShareLink, User
+from app.db.models import Booking, EventType, Schedule, ShareLink, User
 from app.schemas.contracts import CreateEventTypeRequest, UpdateEventTypeRequest
 from app.services.calendar import booking_url, dumps_json, is_share_link_expired
 
@@ -17,6 +17,12 @@ def create_event_type(db: Session, user: User, body: CreateEventTypeRequest) -> 
     ensure_slug_available(db, user.id, body.slug)
 
     policy = body.confirmationPolicy
+    _validate_settings(
+        body.durationMinutes,
+        body.slotIntervalMinutes,
+        policy.type.value if policy else "automatic",
+        bool(policy.blockSlotBeforeConfirmation) if policy else False,
+    )
     event_type = EventType(
         owner_id=user.id,
         schedule_id=schedule_id,
@@ -74,13 +80,44 @@ def update_event_type(db: Session, user: User, event_type_id: str, body: UpdateE
     if "hidden" in body.model_fields_set and body.hidden is not None:
         event_type.hidden = body.hidden
 
+    _validate_settings(
+        event_type.duration_minutes,
+        event_type.slot_interval_minutes,
+        event_type.confirmation_policy_type,
+        event_type.block_slot_before_confirmation,
+    )
     db.commit()
     db.refresh(event_type)
     return event_type
 
 
+def _validate_settings(
+    duration_minutes: int,
+    slot_interval_minutes: int | None,
+    confirmation_policy_type: str,
+    block_slot_before_confirmation: bool,
+) -> None:
+    if duration_minutes <= 0:
+        raise ApiException(400, "validation_error", "durationMinutes must be positive.")
+    if slot_interval_minutes is not None and slot_interval_minutes <= 0:
+        raise ApiException(400, "validation_error", "slotIntervalMinutes must be positive.")
+    if confirmation_policy_type == "automatic" and block_slot_before_confirmation:
+        raise ApiException(
+            400,
+            "validation_error",
+            "Automatic confirmation cannot block slots before confirmation.",
+        )
+
+
 def delete_event_type(db: Session, owner_id: str, event_type_id: str) -> None:
     event_type = get_owned_event_type(db, owner_id, event_type_id)
+    has_bookings = db.scalar(select(Booking.id).where(Booking.event_type_id == event_type.id).limit(1))
+    if has_bookings is not None:
+        raise ApiException(
+            409,
+            "conflict",
+            "Event type has bookings and cannot be deleted. Hide it instead.",
+        )
     db.delete(event_type)
     db.commit()
 
